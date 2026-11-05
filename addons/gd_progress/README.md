@@ -65,5 +65,12 @@ if (progress.is_valid()) {
 
 ## Changing the script
 
-Raise `VERSION` in every release. Older copies call the members listed at the top
-of the script, so those can only gain optional arguments, never change.
+Older copies call the members listed at the top of the script, so those can only
+gain optional arguments, never change.
+
+## Releasing
+
+Push a tag such as `v1.2.3`. The release workflow writes the version into
+`VERSION`, moves the tag onto that commit, and posts `gd_progress.gd` to a GitHub
+release. Take the script from a release or tag, because any other commit has
+version 0 and loses to every released copy.

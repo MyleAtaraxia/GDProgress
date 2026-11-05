@@ -1,8 +1,9 @@
 @tool
 extends Node
 
-# Bump on every release. The newest copy in a project runs the window. The members marked below are called by older copies, so never rename them or change their arguments.
-const VERSION := 1
+# The newest copy in a project runs the window. The release workflow stamps this from the tag, so a copy from an unreleased commit stays 0 and loses to any release.
+# The members marked below are called by older copies, so never rename them or change their arguments.
+const VERSION := 0
 const SKIPPED := -1.0
 const SINGLETON := "GDProgress"
 const SELF := preload("gd_progress.gd")
