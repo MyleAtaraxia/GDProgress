@@ -1,0 +1,35 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      SCRIPT: gd_progress.gd
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Stamp the version
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v([0-9]+)\.([0-9]+)\.([0-9]+)$ ]] || { echo "Tags must look like v1.2.3"; exit 1; }
+          version=$((10#${BASH_REMATCH[1]} * 1000000 + 10#${BASH_REMATCH[2]} * 1000 + 10#${BASH_REMATCH[3]}))
+          sed -i "s/^const VERSION := .*/const VERSION := $version/" "$SCRIPT"
+          grep -q "^const VERSION := $version\$" "$SCRIPT"
+      - name: Commit the version to master and move the tag onto it
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "chore(release) $GITHUB_REF_NAME"
+          git push origin HEAD:master
+          git tag -f "$GITHUB_REF_NAME"
+          git push -f origin "$GITHUB_REF_NAME"
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$SCRIPT" --title "$GITHUB_REF_NAME" --generate-notes
