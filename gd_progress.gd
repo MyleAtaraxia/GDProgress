@@ -3,7 +3,7 @@ extends Node
 
 # The newest copy in a project runs the window. The release workflow stamps this from the tag and commits it to master, so do not edit it by hand.
 # The members marked below are called by older copies, so never rename them or change their arguments.
-const VERSION := 0
+const VERSION := 1000000
 const SKIPPED := -1.0
 const SINGLETON := "GDProgress"
 const SELF := preload("gd_progress.gd")
