@@ -2,11 +2,13 @@
 
 One progress window for every addon that does work when Play is pressed. It is a
 single GDScript file with no binaries, and it does not need enabling in Project
-Settings. Copy `addons/gd_progress/` into the project, always to that path, so
-that every addon loads the same file. Newer copies replace older ones.
+Settings. Each addon brings its own copy of `gd_progress.gd`, anywhere inside its
+own folder. Copy only that file, because a shared `.uid` makes Godot warn.
 
-The first call creates one shared `GDProgress` Engine singleton. Every addon
-reports to it, each under its own task name, and they share one window and one bar.
+The newest copy in the project creates one `GDProgress` Engine singleton, which
+runs the window. Older copies report to it, each addon under its own task name,
+so they all share one window and one bar. Do not add a `class_name`: two scanned
+copies would stop each other from loading.
 
 | Call | When |
 |------|------|
@@ -28,6 +30,8 @@ Calls must come from the main thread, inside `_build()`. It blocks the editor, s
 @tool
 extends EditorPlugin
 
+const GDProgress := preload("gd_progress.gd")
+
 func _enter_tree() -> void:
 	GDProgress.add_task("My Addon")
 
@@ -48,7 +52,7 @@ Load the script by path, which also lets the addon stay optional:
 
 ```cpp
 Ref<Script> gd_progress() {
-	const char *path = "res://addons/gd_progress/gd_progress.gd";
+	const char *path = "res://addons/my_addon/gd_progress.gd";
 	ResourceLoader *loader = ResourceLoader::get_singleton();
 	return loader->exists(path) ? Ref<Script>(loader->load(path)) : Ref<Script>();
 }
@@ -58,3 +62,8 @@ if (progress.is_valid()) {
 	progress->call("update", "My Addon", "Baking", 0.5);
 }
 ```
+
+## Changing the script
+
+Raise `VERSION` in every release. Older copies call the members listed at the top
+of the script, so those can only gain optional arguments, never change.
