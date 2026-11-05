@@ -1,11 +1,14 @@
 @tool
-class_name GDProgress
 extends Node
 
+# Bump on every release. The newest copy in a project runs the window. The members marked below are called by older copies, so never rename them or change their arguments.
+const VERSION := 1
 const SKIPPED := -1.0
 const SINGLETON := "GDProgress"
 const SELF := preload("gd_progress.gd")
 
+# Called by other copies: version, tasks, _add, _remove, _update, _finish.
+var version := VERSION
 var tasks := {}
 var active := ""
 var window: Window
@@ -21,12 +24,12 @@ var started_at := 0
 
 
 static func add_task(task: String) -> void:
-	_shared().tasks[task] = 0.0
+	_shared()._add(task)
 
 
 static func remove_task(task: String) -> void:
 	if Engine.has_singleton(SINGLETON):
-		Engine.get_singleton(SINGLETON).tasks.erase(task)
+		Engine.get_singleton(SINGLETON)._remove(task)
 
 
 static func update(task: String, status: String, ratio: float) -> void:
@@ -50,10 +53,14 @@ static func overall(shares: Dictionary) -> float:
 
 
 static func _shared() -> Node:
-	if Engine.has_singleton(SINGLETON):
-		return Engine.get_singleton(SINGLETON)
+	var current: Node = Engine.get_singleton(SINGLETON) if Engine.has_singleton(SINGLETON) else null
+	if current and current.version >= VERSION:
+		return current
 	var shared := SELF.new()
 	shared.name = SINGLETON
+	if current:
+		shared.tasks = current.tasks
+		current.free()
 	Engine.register_singleton(SINGLETON, shared)
 	EditorInterface.get_base_control().add_child(shared)
 	return shared
@@ -61,6 +68,16 @@ static func _shared() -> Node:
 
 func _exit_tree() -> void:
 	Engine.unregister_singleton(SINGLETON)
+	if window:
+		window.queue_free()
+
+
+func _add(task: String) -> void:
+	tasks[task] = 0.0
+
+
+func _remove(task: String) -> void:
+	tasks.erase(task)
 
 
 func _update(task: String, status: String, ratio: float) -> void:
